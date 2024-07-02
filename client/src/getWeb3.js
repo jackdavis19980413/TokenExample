@@ -1,6 +1,7 @@
 import Web3 from "web3";
 import GreenEnergyToken from "./contracts/GreenEnergyToken.json";
 import GreenEnergyCrowdsaleArtifact from "./contracts/GreenEnergyCrowdsale.json";
+import GreenEnergyProjectVotingArtifact from "./contracts/GreenEnergyProjectVoting.json";
 
 const getWeb3 = async () => {
     if (window.ethereum) {
@@ -37,4 +38,11 @@ const getTokenContract = async (web3) => {
     return instance;
 };
 
-export { getWeb3, getContract, getTokenContract };
+const getVotingContract = async (web3) => {
+    const networkId = await web3.eth.net.getId();
+    const deployedNetwork = GreenEnergyProjectVotingArtifact.networks[networkId];
+    const instance = new web3.eth.Contract(GreenEnergyProjectVotingArtifact.abi, deployedNetwork && deployedNetwork.address);
+    return instance;
+};
+
+export { getWeb3, getContract, getTokenContract, getVotingContract };

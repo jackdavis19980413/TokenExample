@@ -9,15 +9,22 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.deploy(GreenEnergyToken, initialSupply);
   const tokenInstance = await GreenEnergyToken.deployed();
 
+
+
   const rate = 2500; // Example rate
   const wallet = accounts[0];
 
-  deployer.link(GreenEnergyToken, GreenEnergyCrowdsale);
-  await deployer.deploy(GreenEnergyCrowdsale, rate, wallet, tokenInstance.address);
+
+
+  await deployer.deploy(GreenEnergyProjectVoting, tokenInstance.address);
+  const votingInstance = await GreenEnergyProjectVoting.deployed();
+
+  
+
+  await deployer.deploy(GreenEnergyCrowdsale, rate, tokenInstance.address, votingInstance.address);
   const crowdsaleInstance = await GreenEnergyCrowdsale.deployed();
 
+  await votingInstance.transferOwnership(crowdsaleInstance.address);
   await tokenInstance.transferOwnership(crowdsaleInstance.address);
-  
-  deployer.link(GreenEnergyToken, GreenEnergyProjectVoting);
-  await deployer.deploy(GreenEnergyProjectVoting, tokenInstance.address);
+  await crowdsaleInstance.transferOwnership(wallet);
 };

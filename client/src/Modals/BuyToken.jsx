@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import InputLabel from "../Components/InputLabel";
 import TextInput from "../Components/TextInput";
 import InputError from "../Components/InputError";
 import { getWeb3, getContract, getTokenContract } from "../getWeb3";
 import Web3 from "web3";
 
-const Modal = ({ isOpen, price, onCloseFunc }) => {
+const Modal = ({ isOpen, price, onCloseFunc, refresh }) => {
     const [amount, setAmount] = useState(1);
     const [ethBalance, setEthBalance] = useState(1);
     const [transactionStatus, setTransactionStatus] = useState({});
     const [balance, setBalance] = useState(0);
     const [exceed, setExceedMsg] = useState('');
 
-    const checkEtherBalance = async () => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const checkEtherBalance = useCallback(async () => {
         const web3Instance = await getWeb3();
 
         const accounts = await web3Instance.eth.getAccounts();
@@ -21,7 +22,7 @@ const Modal = ({ isOpen, price, onCloseFunc }) => {
 
         if (weiAmount > balanceWei) setExceedMsg("Your current Ether balance is not enough")
         else setExceedMsg('')
-    }
+    })
 
     const refreshBalance = async () => {
         const web3Instance = await getWeb3();
@@ -47,8 +48,8 @@ const Modal = ({ isOpen, price, onCloseFunc }) => {
                 console.error("Error connecting to web3", error);
             }
         };
-        initWeb3()
-    }, [ethBalance]);
+        if (isOpen) initWeb3()
+    }, [checkEtherBalance, ethBalance, isOpen]);
 
     if (!isOpen) return null;
 
@@ -79,6 +80,7 @@ const Modal = ({ isOpen, price, onCloseFunc }) => {
 
             if (!success) throw new Error('Amount exceeded')
 
+            refresh();
             setTransactionStatus({ caption: 'Transaction successful', style: 'bg-emerald-500' });
         } catch (error) {
             console.error('Transaction failed:', error);
@@ -112,7 +114,6 @@ const Modal = ({ isOpen, price, onCloseFunc }) => {
                             disabled
                             value={amount}
                             className="block w-full pl-3 pr-40 py-2 bg-gray-900 text-white border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        // onChange={(e) => setAmount(e.target.value)}
                         />
                         <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
                             Current Price: ${price.toFixed(2)}
